@@ -1,0 +1,160 @@
+
+<!------ Include the above in your HEAD tag ---------->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="messaging">
+  <div class="inbox_msg">
+	<div class="mesgs">
+	  <div class="msg_history">
+		<div class="incoming_msg">
+		  <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+		  <div class="received_msg">
+			<div class="received_withd_msg">
+			  <span class="txt">Test which is a new approach to have all
+				solutions</span>
+			  <span class="time_date"> 11:01 AM</span></div>
+		  </div>
+		</div>
+		<div class="outgoing_msg">
+		  <div class="sent_msg">
+			<span class="txt">Test which is a new approach to have all
+			  solutions</span>
+			<span class="time_date"> 11:01 AM</span> </div>
+		</div>
+		
+		<div class="newUser">
+		  <div class="notice_newUser">
+              <span class="newUser_nickname">만두</span>
+              <span class="notice">님이 입장하였습니다.</span>
+		  </div>
+        </div>
+		
+	  </div>
+	  <div class="type_msg">
+		<div class="input_msg_write">
+          <textarea class="write_msg" id="new_msg" placeholder="Type a message"></textarea>
+		  <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+		</div>
+	  </div>
+	</div>
+  </div>
+</div>
+
+<script>
+    var webSocket = new WebSocket("ws://192.168.60.13/AndroidChat/websocket");
+    function disconnect(){
+        webSocket.close();
+    }           
+    webSocket.onopen = function(e){
+        
+    }
+    webSocket.onclose = function(e){}
+    
+    $('.write_msg').keydown(function(key){ //엔터 터치 시
+        if(key.keyCode == 13){
+            var new_msg = document.getElementsByClassName("new_msg");
+            new_msg = new_msg.value;
+            var writer = "${nickname}"; //현재 사용자 닉네임 셋팅
+            webSocket.send(JSON.stringify({msg: msg, writer: writer})); //서버에 메세지 보내기
+            new_msg.value(""); //인풋창 비워주기
+            
+            if(new_msg != null){ 
+                webSocket.onmessage = function(e){ 
+                var currentTime = formatAMPM(new Date());
+                var msg_history = document.getElementsByClassName("msg_history");
+                console.log("현재 시각 : " + currentTime);
+                console.log("서버로부터 온 값 : " + e.data);
+                var data = JSON.parse(e.data);
+                console.log("클라이언트 파싱값 : " + data);
+                
+                    if(data.nickname == "me"){
+                        console.log("내가 보낸 메세지");
+                        msg_history.append("<div class='outgoing_msg'>" +
+                                           "<div class='sent_msg'>" +
+                                           "<p>"+data.translatedMsg+"</p>" +
+                                           "<span class='time_date'>"+currentTime+"</span>" +
+                                           "</div></div>");
+                    }else{
+                        console.log("받은 메세지");
+                        msg_history.append("<div class='incoming_msg'>" +
+                                           "<div class='incoming_msg_nick'>"+data.nickname+"</div>" +
+                                           "<div class='received_msg'>" + 
+                                           "<div class='received_withd_msg'>" +
+                                           "<p>"+data.translatedMsg+"</p>" +
+                                           "<span class='time_date'>"+currentTime+"</span>" +
+                                           "</div></div></div>");
+                    }
+                    $('.msg_history').scrollTop($(document).height());
+                    $("#new_msg").scrollTop($(document).height());
+                }
+            }
+        }
+    });
+    
+    $('.msg_send_btn').on("click", function(){ //전송버튼 터치 시
+        var new_msg = document.getElementsByClassName("new_msg");
+        new_msg = new_msg.value;
+        var writer = "${nickname}"; //현재 사용자 닉네임 셋팅
+        webSocket.send(JSON.stringify({msg: msg, writer: writer})); //서버에 메세지 보내기
+        new_msg.value(""); //인풋창 비워주기
+
+        if(new_msg != null){
+            webSocket.onmessage = function(e){
+                var currentTime = formatAMPM(new Date());
+                var msg_history = document.getElementsByClassName("msg_history");
+                console.log("현재 시각 : " + currentTime);
+                console.log("서버로부터 온 값 : " + e.data);
+                var data = JSON.parse(e.data);
+                console.log("클라이언트 파싱값 : " + data);
+
+                if(data.nickname == "me"){
+                    console.log("내가 보낸 메세지");
+                    msg_history.append("<div class='outgoing_msg'>" +
+                                       "<div class='sent_msg'>" +
+                                       "<p>"+data.translatedMsg+"</p>" +
+                                       "<span class='time_date'>"+currentTime+"</span>" +
+                                       "</div></div>");
+                }else{
+                    console.log("받은 메세지");
+                    msg_history.append("<div class='incoming_msg'>" +
+                                       "<div class='incoming_msg_nick'>"+data.nickname+"</div>" +
+                                       "<div class='received_msg'>" + 
+                                       "<div class='received_withd_msg'>" +
+                                       "<p>"+data.translatedMsg+"</p>" +
+                                       "<span class='time_date'>"+currentTime+"</span>" +
+                                       "</div></div></div>");
+                }
+                $('.msg_history').scrollTop($(document).height());
+                $("#new_msg").scrollTop($(document).height());
+            }
+        }
+    });    
+    
+    function formatAMPM(date) {
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        var strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
+    }
+</script>
+
+</body>
+</html>
